@@ -18,7 +18,7 @@ SFApp::SFApp() : fire(0), is_running(true) {
   }
 
   auto coin = make_shared<SFAsset>(SFASSET_COIN);
-  auto pos  = Point2((surface->w/4), 300);
+  auto pos  = Point2((surface->w/4), 100);
   coin->SetPosition(pos);
   coins.push_back(coin);
 }
