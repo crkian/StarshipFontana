@@ -1,6 +1,6 @@
 #include "SFApp.h"
 
-SFApp::SFApp() : fire(0), is_running(true) {
+SFApp::SFApp() : fire(0), score(0), is_running(true) {
 
   surface = SDL_GetVideoSurface();
   app_box = make_shared<SFBoundingBox>(Vector2(surface->w/2, surface->h/2), surface->w/2, surface->h/2);
@@ -9,16 +9,20 @@ SFApp::SFApp() : fire(0), is_running(true) {
   player->SetPosition(player_pos);
 
   const int number_of_aliens = 10;
-  for(int i=0; i<number_of_aliens; i++) {
-    // place an alien at width/number_of_aliens * i
-    auto alien = make_shared<SFAsset>(SFASSET_ALIEN);
-    auto pos   = Point2((surface->w/number_of_aliens) * i, 200.0f);
-    alien->SetPosition(pos);
-    aliens.push_back(alien);
+  int height = 200.0f;
+  for(int i=0; i<3;i++){
+	  for(int i=0; i<number_of_aliens; i++) {
+	    // place an alien at width/number_of_aliens * i
+	    auto alien = make_shared<SFAsset>(SFASSET_ALIEN);
+	    auto pos   = Point2(20+(surface->w/number_of_aliens) * i, height);
+	    alien->SetPosition(pos);
+	    aliens.push_back(alien);
+	  }
+  height += 60.0f;
   }
 
   auto coin = make_shared<SFAsset>(SFASSET_COIN);
-  auto pos  = Point2((surface->w/4), 300);
+  auto pos  = Point2((surface->w/4), 450);
   coin->SetPosition(pos);
   coins.push_back(coin);
 }
@@ -73,23 +77,40 @@ void SFApp::OnUpdateWorld() {
     p->GoNorth();
   }
 
+//
   for(auto c: coins) {
-    c->GoNorth();
+    c->CoinMove();
   }
 
   // Update enemy positions
   for(auto a : aliens) {
-    a->GoNorth();
+    // do something here
   }
 
   // Detect collisions
   for(auto p : projectiles) {
     for(auto a : aliens) {
       if(p->CollidesWith(a)) {
+	score ++;
         p->HandleCollision();
         a->HandleCollision();
       }
     }
+  }
+
+  for(auto p: projectiles) {
+    for(auto c : coins) {
+      if(p->CollidesWith(c)) {
+	score += 10;
+	p->HandleCollision();
+	c->HandleCollision();
+      }
+    }
+  }
+
+  if(score == 40) {
+	cout << "Well done you scored : " << score << endl;
+	exit(0);
   }
 
   // remove dead aliens (the long way)
@@ -101,6 +122,24 @@ void SFApp::OnUpdateWorld() {
   }
   aliens.clear();
   aliens = list<shared_ptr<SFAsset>>(tmp);
+
+  list<shared_ptr<SFAsset>> tmp1;
+  for(auto p : projectiles) {
+    if(p->IsAlive()) {
+	tmp1.push_back(p);
+    }
+  }
+  projectiles.clear();
+  projectiles = list<shared_ptr<SFAsset>>(tmp1);
+
+  list<shared_ptr<SFAsset>> tmp2;
+  for(auto c : coins) {
+    if(c->IsAlive()) {
+	tmp2.push_back(c);
+    }
+  }
+  coins.clear();
+  coins = list<shared_ptr<SFAsset>>(tmp2);
 }
 
 void SFApp::OnRender() {
